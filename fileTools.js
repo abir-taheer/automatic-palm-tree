@@ -26,6 +26,7 @@ const gitFindRecursive = (dir, do_not_search = ["node_modules", ".git"]) => {
 const performGitPull = (dir) => {
     let data = "";
     try {
+        childProcess.execSync("git config credential.helper store");
         data = childProcess.execSync(`cd ${dir} ; git pull`, {timeout: 5000, stdio: "pipe"}).toString();
     } catch (e) {
         data = `There was an error. This is likely due to insufficient credentials being provided. Below is the error: \n\n${e}`;
