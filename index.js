@@ -1,3 +1,4 @@
+const childProcess = require("child_process");
 const bodyParser = require("body-parser");
 
 const express = require("express");
@@ -14,11 +15,14 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'client/build')));
 
 app.route("/pull").post((req, res) => {
+    childProcess.execSync("git config credential.helper store");
     let dirs = fileTools.gitFindRecursive("./../../");
     fileTools.storeCredentials(req.body["github-username"], req.body["github-password"], "github.com");
     fileTools.storeCredentials(req.body["gitlab-username"], req.body["gitlab-password"], "gitlab.com");
     let response = {};
-    dirs.map(i => response[path.resolve(i)] = fileTools.performGitPull(i));
+    dirs.map(i => {
+        response[path.resolve(i)] = fileTools.performGitPull(i)
+    });
     fileTools.deleteCredentials();
     res.json(response);
 });
