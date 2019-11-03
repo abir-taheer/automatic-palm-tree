@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>StuySU Auto Git Pull</title>
+    <style>
+        input {
+            border-radius: 5px;
+            height: 35px;
+        }
+        #submit-form {
+            color: white;
+            background-color: green;
+            border-radius: 5px;
+            font-size: 20px;
+        }
+        #submit-form:disabled {
+            background-color: grey;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <form id="credentials-form">
+        <p>If both are the same, you only need to fill out one!</p>
+        <h3>Github</h3>
+        Username: <input name="github-username"><br>
+        Password: <input type="password" name="github-password"><br><br>
+
+        <h3>Gitlab</h3>
+        Username: <input name="gitlab-username"><br>
+        Password: <input type="password" name="gitlab-password"><br><br>
+        <button id="submit-form">Submit</button>
+    </form><br><br>
+    <p>Response:</p>
+    <div id="response">
+    </div>
+
+    <script>
+        let serialize = (form) => {
+            let children = form.querySelectorAll("input");
+            let data = {};
+            for(let x = 0; x < children.length ; x++){
+                data[children[x].getAttribute("name")] = children[x].value;
+            }
+
+            return JSON.stringify(data);
+        };
+
+        let form = document.querySelector("#credentials-form");
+        let button = document.querySelector("#submit-form");
+        let textarea = document.querySelector("#response");
+        let attempt = 0;
+
+        button.addEventListener("click", (ev) => {
+            button.setAttribute("disabled", "true");
+            ev.preventDefault();
+            let form_data = serialize(form);
+            fetch("/pull", {
+                method: 'POST',
+                cache: 'no-cache',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: form_data
+            })
+                .then(res => res.json())
+                .then(data => {
+                    attempt++;
+                    let data_keys = Object.keys(data);
+                    let current_container = document.createElement("div");
+                    let attempt_text = document.createElement("h3");
+                    attempt_text.innerText = `Attempt ${attempt} - ${new Date().toTimeString()}`;
+
+                    current_container.appendChild(attempt_text);
+
+                    for(let x = 0; x < data_keys.length; x++){
+                        let container = document.createElement("div");
+                        container.setAttribute("style", "width: 90%; margin-left: 5%");
+                        let label = document.createElement("h4");
+                        label.innerText = data_keys[x];
+                        container.appendChild(label);
+
+                        let text = document.createElement("p");
+                        text.innerHTML = data[data_keys[x]].replace(/\n/g, "<br>");
+                        container.appendChild(text);
+
+                        current_container.appendChild(container);
+
+                        let line_break = document.createElement("hr");
+                        line_break.setAttribute("style", "width: 90%; margin-left: 5%");
+                        current_container.appendChild(line_break);
+
+                    }
+
+                    let new_line_break = document.createElement("hr");
+                    current_container.appendChild(new_line_break);
+                    textarea.insertBefore(current_container, textarea.childNodes[0]);
+
+                    button.removeAttribute("disabled");
+                });
+        });
+    </script>
+</body>
+</html>
